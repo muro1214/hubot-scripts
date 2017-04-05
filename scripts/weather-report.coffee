@@ -31,8 +31,7 @@ module.exports = (robot) ->
     say "#{place}の#{date}の天気予報ですね。わかりました。調べてきます。"
     
     #get geocording
-    cordinates = null
-    msg.http('http://geo.search.olp.yahooapis.jp/OpenLocalPlatform/V1/geoCoder')
+    msg.http('https://map.yahooapis.jp/geocode/V1/geoCoder')
       .query({
         appid: config.getCoderKey
         query: place
@@ -41,35 +40,33 @@ module.exports = (robot) ->
       })
       .get() (err, res, body) ->
         geoinfo = JSON.parse(body)
-        cordinates = (geoinfo.Feature[0].Geometry.Coordinates).split(",")
-    
-    count = getCount date
-    msg.http('http://api.openweathermap.org/data/2.5/forecast/daily')
-      .query({
-        lon: coordinates[0]
-        lat: coordinates[1]
-        units: 'metric'
-        cnt: count
-        APPID: config.openWeatherKey
-      })
-      .get() (err, res, body) ->
-        if err
-          msg.send('Failed to get openWeather API.')
-          return
+        coordinates = (geoinfo.Feature[0].Geometry.Coordinates).split(",")
+
+        count = getCount date
+        msg.http('http://api.openweathermap.org/data/2.5/forecast/daily')
+          .query({
+            lon: coordinates[0]
+            lat: coordinates[1]
+            units: 'metric'
+            cnt: count
+            APPID: config.openWeatherKey
+          })
+          .get() (err, res, body) ->
+            if err
+              msg.send('Failed to get openWeather API.')
+              return
         
-        result = JSON.parse(body)
-        forecastTime = new Date(result.list[count - 1].dt * 1000)
-        message = "【#{place} #{date}の天気予報 (発表：#{dateFormat(forecastTime, "yyyy/mm/dd HH:MM:ss")})】\n" +
-        "http://openweathermap.org/img/w/#{result.list[count - 1].weather[0].icon}\n" +
-        "天候：#{getWeatherJapanese result.list[count - 1].weather[0].icon}\n" +
-        "最低気温：#{Math.round result.list[count - 1].temp.min}[℃]  最高気温：#{Math.round result.list[count - 1].temp.max}[℃]\n" +
-        "気温推移(朝 -> 昼 -> 夕方 -> 夜)：#{Math.round result.list[count - 1].temp.morn}[℃] -> #{Math.round result.list[count - 1].temp.day}[℃] -> #{Math.round result.list[count - 1].temp.eve}[℃] -> #{Math.round result.list[count - 1].temp.night}[℃]\n" +
-        "湿度：#{result.list[count - 1].humidity}[%]\n" +
-        "風速(風向)：#{result.list[count - 1].speed}[m/s] (#{getDegreeName result.list[count - 1].deg})\n" +
-        "気圧：#{result.list[count - 1].pressure}[hpa]\n" +
-        "雲量：#{result.list[count - 1].coulds}[%]"
-        robot.logger.debug message
-        say message
+            result = JSON.parse(body)
+            message = "【\"#{place}\" #{date}の天気予報 #{getDate date} 】\n" +
+            "http://openweathermap.org/img/w/#{result.list[count - 1].weather[0].icon}.png\n" +
+            "天候：#{getWeatherJapanese result.list[count - 1].weather[0].icon}\n" +
+            "最低気温：#{Math.round result.list[count - 1].temp.min}[℃]  最高気温：#{Math.round result.list[count - 1].temp.max}[℃]\n" +
+            "気温推移(朝->昼->夕方->夜)：#{Math.round result.list[count - 1].temp.morn}[℃] -> #{Math.round result.list[count - 1].temp.day}[℃] -> #{Math.round result.list[count - 1].temp.eve}[℃] -> #{Math.round result.list[count - 1].temp.night}[℃]\n" +
+            "湿度：#{result.list[count - 1].humidity}[%]\n" +
+            "風速(風向)：#{Math.round(result.list[count - 1].speed * 10) / 10}[m/s] (#{getDegreeName result.list[count - 1].deg})\n" +
+            "気圧：#{result.list[count - 1].pressure}[hpa]\n" +
+            "雲量：#{result.list[count - 1].clouds}[%]"
+            say message
 
 getCount = (date) ->
   if date == '今日'
@@ -84,10 +81,27 @@ getCount = (date) ->
   match = /(\d{1,2})日後/.exec(date)
   if match?
     count = match[1]
-    return count + 1
+    return parseInt(count, 10) + 1
+
+getDate = (date) ->
+  d = new Date
+  if date == '今日'
+    return dateFormat(d, "yyyy/mm/dd(ddd)")
+  else if date == '明日'
+    return dateFormat(d.setTime(d.getTime() + 1 * 24 * 60 * 60 * 1000), "yyyy/mm/dd(ddd)")
+  else if date == '明後日' || date == 'あさって'
+    return dateFormat(d.setTime(d.getTime() + 2 * 24 * 60 * 60 * 1000), "yyyy/mm/dd(ddd)")
+  else if date == '明々後日' || date == '明明後日' || date == 'しあさって'
+    return dateFormat(d.setTime(d.getTime() + 3 * 24 * 60 * 60 * 1000), "yyyy/mm/dd (ddd)")
+  
+  match = /(\d{1,2})日後/.exec(date)
+  if match?
+    count = match[1]
+    return dateFormat(d.setTime(d.getTime() + parseInt(count, 10) * 24 * 60 * 60 * 1000), "yyyy/mm/dd(ddd)")
+
 
 getWeatherJapanese = (icon) ->
-  match = /\d{2}[dn]/.exec(icon)
+  match = /(\d{2})[dn]/.exec(icon)
   if match?
     switch match[1]
       when '01'
@@ -95,6 +109,7 @@ getWeatherJapanese = (icon) ->
       when '02'
         return '晴れ'
       when '03'
+        return 'くもり'
       when '04'
         return 'くもり'
       when '09'
