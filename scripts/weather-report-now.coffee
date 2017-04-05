@@ -49,7 +49,7 @@ module.exports = (robot) ->
           })
           .get() (err, res, body) ->
             if err
-              msg.send('Failed to get openWeather API.')
+              say 'Failed to get openWeather API.'
               return
         
             result = JSON.parse(body)
