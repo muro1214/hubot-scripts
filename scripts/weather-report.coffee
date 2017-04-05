@@ -7,7 +7,7 @@
 #   HUBOT_OPENWEATHER_API_KEY
 #
 # Commands:
-#  hubot <地名>の(<日付>)?の天気 - 天気情報を返す
+#  hubot 天気 <地名> (<日付>)? - 天気情報を返す
 #  日付＝今日、明日、10日後とか。MM/ddではないです
 #
 # Author:
