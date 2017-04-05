@@ -26,7 +26,7 @@ module.exports = (robot) ->
   robot.hear /^(\S+)の(今|現在)の天気/i, (msg) ->
     place = msg.match[1]
     
-    say "#{place}の#{msg.match[2]}の天気ですね。わかりました。調べてきます。"
+    say "#{place}の#{msg.match[2]}の天気ですね。わかりました。少し待ってください。"
     
     #get geocording
     msg.http('https://map.yahooapis.jp/geocode/V1/geoCoder')
