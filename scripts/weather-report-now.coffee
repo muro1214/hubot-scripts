@@ -7,7 +7,7 @@
 #   HUBOT_OPENWEATHER_API_KEY
 #
 # Commands:
-#  hubot 天気 <地名> - 現在の天気情報を返す
+#  hubot <地名>の(今|現在)の天気 - 現在の天気情報を返す
 #
 # Author:
 #  muro1214
@@ -23,10 +23,10 @@ module.exports = (robot) ->
   say = (message) ->
     robot.send {room: config.roomName}, message
 
-  robot.hear /^(\S+)の今の天気/i, (msg) ->
+  robot.hear /^(\S+)の(今|現在)の天気/i, (msg) ->
     place = msg.match[1]
     
-    say "#{place}の現在の天気ですね。わかりました。調べてきます。"
+    say "#{place}の#{msg.match[2]}の天気ですね。わかりました。調べてきます。"
     
     #get geocording
     msg.http('https://map.yahooapis.jp/geocode/V1/geoCoder')
