@@ -7,7 +7,7 @@
 #   HUBOT_OPENWEATHER_API_KEY
 #
 # Commands:
-#  hubot 天気 <地名> (<日付>)? - 天気情報を返す
+#  hubot <地名>の<日付>の天気 - 天気情報を返す
 #  日付＝今日、明日、10日後とか。MM/ddではないです
 #
 # Author:
@@ -24,11 +24,11 @@ module.exports = (robot) ->
   say = (message) ->
     robot.send {room: config.roomName}, message
 
-  robot.hear /^天気[\s　](\S+)[\s　]?(明日|あさって|明後日|しあさって|明明後日|明々後日|\d{1,2}日後)?/i, (msg) ->
+  robot.hear /^(\S+)の(今日|明日|あさって|明後日|しあさって|明明後日|明々後日|\d{1,2}日後)の天気/i, (msg) ->
     place = msg.match[1]
-    date = msg.match[2] ? '今日'
+    date = msg.match[2]
     
-    say "#{place}の#{date}の天気予報ですね。わかりました。調べてきます。"
+    say "#{place}の#{date}の天気予報ですね。わかりました。少し待ってください。"
     
     #get geocording
     msg.http('https://map.yahooapis.jp/geocode/V1/geoCoder')
