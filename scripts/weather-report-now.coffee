@@ -65,9 +65,9 @@ module.exports = (robot) ->
             "日の入り：#{dateFormat(new Date(result.sys.sunset * 1000), "yyyy/mm/dd HH:MM")}"
 
             if result.rain?
-              message = message + "\n降雨量(直近3時間)：#{result.rain['3h']}[mm]"
+              message += "\n降雨量(直近3時間)：#{result.rain['3h']}[mm]"
             if result.snow?
-              message = message + "\n降雪量(直近3時間)：#{result.snow['3h']}[mm]"
+              message += "\n降雪量(直近3時間)：#{result.snow['3h']}[mm]"
             
             say message
 
@@ -97,7 +97,7 @@ getWeatherJapanese = (icon) ->
         return "不明(#{match[1]})"
 
 getDegreeName = (degree) ->
-  dname = ['北','北北東','北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西', '北']
+  dname = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西', '北']
   dindex = Math.round( degree / 22.5 )
   
   return dname[dindex]
