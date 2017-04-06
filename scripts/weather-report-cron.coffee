@@ -40,8 +40,10 @@ module.exports = (robot) ->
           return
       
         result = JSON.parse(body)
+        icon = result.list[0].weather[0].icon.replace(/[dn]/g, "d")
+        suffix = (new Date()).toISOString().replace(/[^0-9]/g, "")
         message = "【\"小田原\" 今日の天気予報 #{dateFormat(new Date, "yyyy/mm/dd(ddd)")} 】\n" +
-        "http://openweathermap.org/img/w/#{result.list[0].weather[0].icon}.png\n" +
+        "http://openweathermap.org/img/w/#{icon}.png?#{suffix}\n" +
         "天候：#{getWeatherJapanese result.list[0].weather[0].icon}\n" +
         "最低気温：#{Math.round result.list[0].temp.min}[℃]  最高気温：#{Math.round result.list[0].temp.max}[℃]\n" +
         "気温推移(朝->昼->夕方->夜)：#{Math.round result.list[0].temp.morn}[℃] -> #{Math.round result.list[0].temp.day}[℃] -> #{Math.round result.list[0].temp.eve}[℃] -> #{Math.round result.list[0].temp.night}[℃]\n" +

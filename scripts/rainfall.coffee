@@ -47,10 +47,11 @@ getRainFallUrl = (lon, lat, zoom) ->
   width = 500
   height = 500
   
-  url = "http://map.olp.yahooapis.jp/OpenLocalPlatform/V1/static?appid=#{config.getCoderKey}" +
+  datetime = (new Date()).toISOString().replace(/[^0-9]/g, "")
+  url = "https://map.yahooapis.jp/map/V1/static?appid=#{config.getCoderKey}" +
   "&lon=#{lon}&lat=#{lat}" +
   "&z=#{zoom}" +
   "&width=#{width}&height=#{height}" +
-  "&overlay=type:rainfall"
+  "&overlay=type:rainfall|date:#{datetime}"
 
   return url

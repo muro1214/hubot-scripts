@@ -53,8 +53,10 @@ module.exports = (robot) ->
               return
         
             result = JSON.parse(body)
+            icon = result.weather[0].icon.replace(/[dn]/g, "d")
+            suffix = (new Date()).toISOString().replace(/[^0-9]/g, "")
             message = "【\"#{place}\" 現在の天気 #{dateFormat(new Date(result.dt * 1000), "yyyy/mm/dd HH:MM(ddd)")}時点 】\n" +
-            "http://openweathermap.org/img/w/#{result.weather[0].icon}.png\n" +
+            "http://openweathermap.org/img/w/#{icon}.png?#{suffix}\n" +
             "天候：#{getWeatherJapanese result.weather[0].icon}\n" +
             "現在の気温：#{Math.round result.main.temp}[℃]\n" +
             "湿度：#{result.main.humidity}[%]\n" +
