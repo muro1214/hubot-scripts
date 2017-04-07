@@ -7,7 +7,7 @@
 #   HUBOT_OPENWEATHER_API_KEY
 #
 # Commands:
-#  hubot <地名>の雨雲(レーダー)? (ズーム|zoom)? - 雨雲レーダーを返す
+#  雨雲(レーダー|レーダ|情報)? <地名> (ズーム|zoom|拡大)? - 当該地点の雨雲レーダーを返す
 #
 # Author:
 #  muro1214
@@ -23,8 +23,8 @@ module.exports = (robot) ->
   say = (message) ->
     robot.send {room: config.roomName}, message
 
-  robot.hear /^(\S+)の雨雲(レーダー|レーダ|情報)?[\s　]?(ズーム|zoom|拡大)?/i, (msg) ->
-    place = msg.match[1]
+  robot.hear /^雨雲(レーダー|レーダ|情報)?[\s　](\S+)[\s　]?(ズーム|zoom|拡大)?$/i, (msg) ->
+    place = msg.match[2]
     zoom = if msg.match[3] then '14' else '12'
     zoomSay = if msg.match[3] then 'のズーム' else ''
 
