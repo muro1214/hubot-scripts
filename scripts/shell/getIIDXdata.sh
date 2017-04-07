@@ -1,0 +1,93 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+  echo "指定された引数は$#個です。" 1>&2
+  echo "実行するには2個の引数が必要です。" 1>&2
+  exit 1
+fi
+
+unofficial=$1
+lamp=${2^^}
+sqlfile=scripts/shell/`date '+%Y%m%d%H%M%S'`.sql
+
+echo "SELECT" > $sqlfile
+echo "  musiclist.name, difficulty.difficulty, musiclist.unofficial, clearlamp.clearlamp" >> $sqlfile
+
+cat << __EOS__ >> $sqlfile
+FROM
+  public.clearstate,
+  public.difficulty,
+  public.clearlamp,
+  public.musiclist
+WHERE
+  clearstate.clearlamp = clearlamp.id
+AND
+  clearstate.music = musiclist.id
+AND
+  musiclist.difficulty = difficulty.id
+__EOS__
+
+if [ "$unofficial" != "全部" ]; then
+  echo "AND" >> $sqlfile
+fi
+
+if [ `echo $unofficial | grep "以上"` ]; then
+  echo "  musiclist.unofficial >= ${unofficial:0:4}::real" >> $sqlfile
+elif [ `echo $unofficial | grep "以下"` ]; then
+  echo "  musiclist.unofficial <= ${unofficial:0:4}::real" >> $sqlfile
+elif [ `echo $unofficial | grep "未満"` ]; then
+  echo "  musiclist.unofficial < ${unofficial:0:4}::real" >> $sqlfile
+elif [ `echo $unofficial | grep "-"` ]; then
+  IFS=- eval 'arr=($unofficial)'
+  if [[ ${arr[0]} > "${arr[1]}" ]]; then
+    tmp=${arr[0]}
+    arr[0]=${arr[1]}
+    arr[1]=tmp
+  fi
+  echo "  musiclist.unofficial >= ${arr[0]}::real" >> $sqlfile
+  echo "AND" >> $sqlfile
+  echo "  musiclist.unofficial <= ${arr[1]}::real" >> $sqlfile
+else
+  echo "  musiclist.unofficial = ${unofficial}::real" >> $sqlfile
+fi
+
+lampID=0
+if [ `echo $lamp | grep "未プレイ"` ]; then
+  lampID=-1
+elif [ `echo $lamp | grep "未クリア"` ]; then
+  lampID=1
+elif [ `echo $lamp | grep "アシスト"` ]; then
+  lampID=2
+elif [ `echo $lamp | grep "イージー"` ]; then
+  lampID=3
+elif [ `echo $lamp | grep "ノマゲ"` ]; then
+  lampID=4
+elif [ `echo $lamp | grep "ハード"` ]; then
+  lampID=5
+elif [ `echo $lamp | grep -E "EXH|エクハ"` ]; then
+  lampID=6
+elif [ `echo $lamp | grep -E "FC|フルコン"` ]; then
+  lampID=7
+fi
+
+if [ "$lamp" != "全部" ]; then
+  echo "AND" >> $sqlfile
+fi
+
+if [ `echo $lamp | grep "以上" | grep -vE "未クリア|未プレイ"` ]; then
+  echo "  clearstate.clearlamp >= $lampID" >> $sqlfile
+elif [ `echo $lamp | grep "以下" | grep -vE "未クリア|未プレイ"` ]; then
+  echo "  clearstate.clearlamp <= $lampID" >> $sqlfile
+elif [ `echo $lamp | grep "未満" | grep -vE "未クリア|未プレイ"` ]; then
+  echo "  clearstate.clearlamp < $lampID" >> $sqlfile
+elif [ "$lamp" = "全部" ]; then
+  echo "" > /dev/null
+else
+  echo "  clearstate.clearlamp = $lampID" >> $sqlfile
+fi
+
+echo "ORDER BY musiclist.unofficial, musiclist.name" >> $sqlfile
+
+psql -f $sqlfile -U $HUBOT_IIDX_DB_USER -d $HUBOT_IIDX_DB_NAME -A -F, -t
+
+rm -f $sqlfile
