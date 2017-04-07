@@ -11,7 +11,7 @@ lamp=${2^^}
 sqlfile=scripts/shell/`date '+%Y%m%d%H%M%S'`.sql
 
 echo "SELECT" > $sqlfile
-echo "  musiclist.name, difficulty.difficulty, musiclist.unofficial, clearlamp.clearlamp" >> $sqlfile
+echo "  musiclist.name, difficulty.name, musiclist.unofficial, clearlamp.name" >> $sqlfile
 
 cat << __EOS__ >> $sqlfile
 FROM
