@@ -82,6 +82,8 @@ elif [ `echo $lamp | grep "未満" | grep -vE "未クリア|未プレイ"` ]; th
   echo "  clearstate.clearlamp < $lampID" >> $sqlfile
 elif [ "$lamp" = "全部" ]; then
   echo "" > /dev/null
+elif [ "$lamp" = "未クリア" ]; then
+  echo "  clearstate.clearlamp <= $lampID" >> $sqlfile
 else
   echo "  clearstate.clearlamp = $lampID" >> $sqlfile
 fi
