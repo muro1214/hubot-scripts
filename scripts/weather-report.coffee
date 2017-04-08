@@ -14,6 +14,7 @@
 #  muro1214
 
 dateFormat = require 'dateformat'
+@child = require('child_process').exec
 
 config = 
   roomName: process.env.HUBOT_SLACK_ROOMNAME
@@ -23,6 +24,16 @@ config =
 module.exports = (robot) ->
   say = (message) ->
     robot.send {room: config.roomName}, message
+  
+  execute = (command) ->
+    @child command, (err, stdout, stderr) ->
+      if err?
+        return null
+      
+      resp = ""
+      resp += stdout if stdout?
+      resp += stderr if stderr?
+      return resp
 
   robot.hear /^天気予報[\s　](\S+)[\s　](今日|明日|あさって|明後日|しあさって|明明後日|明々後日|\d{1,2}日後)$/i, (msg) ->
     place = msg.match[1]
@@ -68,6 +79,13 @@ module.exports = (robot) ->
             "風速(風向)：#{Math.round(result.list[count - 1].speed * 10) / 10}[m/s] (#{getDegreeName result.list[count - 1].deg})\n" +
             "気圧：#{result.list[count - 1].pressure}[hpa]\n" +
             "雲量：#{result.list[count - 1].clouds}[%]"
+            
+            if place == '小田原'
+              if execute("xvfb-run --server-args=\"-screen 0, 1280x1024x24\" cutycapt --url=\"http://weather.yahoo.co.jp/weather/jp/14/4620.html\" --out script/image/yahoo.png")?
+                if execute("convert script/image/yahoo.png -crop \'315x170+2+340\' scripts/image/cropped.png")?
+                  if execute("gyazo scripts/image/cropped.png")
+                    message += execute("gyazo scripts/image/cropped.png")
+            
             say message
 
 getCount = (date) ->
@@ -128,7 +146,7 @@ getWeatherJapanese = (icon) ->
         return "不明(#{match[1]})"
 
 getDegreeName = (degree) ->
-  dname = ['北','北北東','北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西', '北']
+  dname = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西', '北']
   dindex = Math.round( degree / 22.5 )
   
   return dname[dindex]
