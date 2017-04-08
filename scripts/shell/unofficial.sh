@@ -3,7 +3,7 @@
 stamp=`date '+%Y-%m-%d %H:%M:%S'`
 
 # update unofficial level table
-# node scripts/shell/snjbot.js > /var/gochiusa/unofficial.csv 
+node scripts/shell/snjbot.js > /var/gochiusa/unofficial.csv 
 
 sqlfile=scripts/shell/`date '+%Y%m%d%H%M%S'`.sql
 
@@ -38,6 +38,7 @@ and
   unofficial_audit.id = musiclist.id
 and
   musiclist.difficulty = difficulty.id
+order by new
 __EOS__
 
 # get history
