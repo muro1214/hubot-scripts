@@ -14,16 +14,16 @@ echo "SELECT" > $sqlfile
 echo "  musiclist.name, difficulty.name, musiclist.unofficial, clearlamp.name" >> $sqlfile
 
 cat << __EOS__ >> $sqlfile
-FROM
+from
   public.clearstate,
   public.difficulty,
   public.clearlamp,
   public.musiclist
-WHERE
+where
   clearstate.clearlamp = clearlamp.id
-AND
+and
   clearstate.music = musiclist.id
-AND
+and
   musiclist.difficulty = difficulty.id
 __EOS__
 
@@ -88,7 +88,7 @@ else
   echo "  clearstate.clearlamp = $lampID" >> $sqlfile
 fi
 
-echo "ORDER BY musiclist.unofficial, musiclist.name" >> $sqlfile
+echo "order by musiclist.unofficial, musiclist.name" >> $sqlfile
 
 psql -f $sqlfile -U $HUBOT_IIDX_DB_USER -d $HUBOT_IIDX_DB_NAME -A -F, -t
 

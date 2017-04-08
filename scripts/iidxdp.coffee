@@ -38,7 +38,7 @@ module.exports = (robot) ->
         return
 
       lines = stdout.split "\n"
-      lines.pop()
+#      lines.pop()
 
       if output == 'お題'
         data = random(lines).split ","
