@@ -7,7 +7,7 @@
 #   HUBOT_OPENWEATHER_API_KEY
 #
 # Commands:
-#  hubot <地名>の(今|現在)の天気 - 現在の天気情報を返す
+#  hubot 天気 <地名> - 現在の天気情報を返す
 #
 # Author:
 #  muro1214
@@ -23,10 +23,10 @@ module.exports = (robot) ->
   say = (message) ->
     robot.send {room: config.roomName}, message
 
-  robot.hear /^(\S+)の(今|現在)の天気/i, (msg) ->
+  robot.hear /^天気[\s　](\S+)$/i, (msg) ->
     place = msg.match[1]
     
-    say "#{place}の#{msg.match[2]}の天気ですね。わかりました。少し待ってください。"
+    say "#{place}の現在の天気ですね。わかりました。少し待ってください。"
     
     #get geocording
     msg.http('https://map.yahooapis.jp/geocode/V1/geoCoder')
@@ -53,8 +53,10 @@ module.exports = (robot) ->
               return
         
             result = JSON.parse(body)
+            icon = result.weather[0].icon.replace(/[dn]/g, "d")
+            suffix = (new Date()).toISOString().replace(/[^0-9]/g, "")
             message = "【\"#{place}\" 現在の天気 #{dateFormat(new Date(result.dt * 1000), "yyyy/mm/dd HH:MM(ddd)")}時点 】\n" +
-            "http://openweathermap.org/img/w/#{result.weather[0].icon}.png\n" +
+            "http://openweathermap.org/img/w/#{icon}.png?#{suffix}\n" +
             "天候：#{getWeatherJapanese result.weather[0].icon}\n" +
             "現在の気温：#{Math.round result.main.temp}[℃]\n" +
             "湿度：#{result.main.humidity}[%]\n" +

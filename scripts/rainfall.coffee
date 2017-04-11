@@ -7,7 +7,7 @@
 #   HUBOT_OPENWEATHER_API_KEY
 #
 # Commands:
-#  hubot <地名>の雨雲(レーダー)? (ズーム|zoom)? - 雨雲レーダーを返す
+#  雨雲(レーダー|レーダ|情報)? <地名> (ズーム|zoom|拡大)? - 当該地点の雨雲レーダーを返す
 #
 # Author:
 #  muro1214
@@ -23,8 +23,8 @@ module.exports = (robot) ->
   say = (message) ->
     robot.send {room: config.roomName}, message
 
-  robot.hear /^(\S+)の雨雲(レーダー|レーダ|情報)?[\s　]?(ズーム|zoom|拡大)?/i, (msg) ->
-    place = msg.match[1]
+  robot.hear /^雨雲(レーダー|レーダ|情報)?[\s　](\S+)[\s　]?(ズーム|zoom|拡大)?$/i, (msg) ->
+    place = msg.match[2]
     zoom = if msg.match[3] then '14' else '12'
     zoomSay = if msg.match[3] then 'のズーム' else ''
 
@@ -47,10 +47,11 @@ getRainFallUrl = (lon, lat, zoom) ->
   width = 500
   height = 500
   
-  url = "http://map.olp.yahooapis.jp/OpenLocalPlatform/V1/static?appid=#{config.getCoderKey}" +
+  datetime = (new Date()).toISOString().replace(/[^0-9]/g, "")
+  url = "https://map.yahooapis.jp/map/V1/static?appid=#{config.getCoderKey}" +
   "&lon=#{lon}&lat=#{lat}" +
   "&z=#{zoom}" +
   "&width=#{width}&height=#{height}" +
-  "&overlay=type:rainfall"
+  "&overlay=type:rainfall|date:#{datetime}"
 
   return url
