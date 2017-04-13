@@ -4,44 +4,53 @@ stamp=`date '+%Y-%m-%d %H:%M:%S'`
 
 # update unofficial level table
 node scripts/shell/snjbot.js > /var/gochiusa/unofficial.csv 
+command="load data local infile '/var/gochiusa/unofficial.csv' replace into table unofficial fields terminated by ','"
+/opt/bitnami/mysql/bin/mysql -u $HUBOT_IIDX_DB_USER $HUBOT_IIDX_DB_NAME -e "$command" > /dev/null
 
 sqlfile=scripts/shell/`date '+%Y%m%d%H%M%S'`.sql
 
-# make sql for mergeing table.
+# make sql for insert.
 cat << __EOS__ > $sqlfile
-insert into 
+insert ignore into 
   musiclist (id, name, difficulty, official, unofficial)
 select
-  id, name, difficulty, official, unofficial
+  unofficial.id, unofficial.music, unofficial.difficulty, unofficial.official, unofficial.unofficial
 from
-  iidxcsv
-on conflict(id) do
-  update set unofficial = excluded.unofficial
-where
-  musiclist.unofficial != excluded.unofficial
+  unofficial
 __EOS__
 
-# merge unofficial table and music table
-psql -f $sqlfile -U $HUBOT_IIDX_DB_USER -d $HUBOT_IIDX_DB_NAME > /dev/null
+# insert
+/opt/bitnami/mysql/bin/mysql -u $HUBOT_IIDX_DB_USER $HUBOT_IIDX_DB_NAME < $sqlfile > /dev/null
+
+# make sql for update.
+cat << __EOS__ > $sqlfile
+update musiclist, unofficial
+  set musiclist.unofficial = unofficial.unofficial
+where
+  musiclist.id = unofficial.id
+and
+  musiclist.unofficial != unofficial.unofficial
+__EOS__
+
+# insert
+/opt/bitnami/mysql/bin/mysql -u $HUBOT_IIDX_DB_USER $HUBOT_IIDX_DB_NAME -N -B < $sqlfile > /dev/null
 
 # make sql for getting history.
 cat << __EOS__ > $sqlfile
 select
   musiclist.name, difficulty.name, old, new
 from
-  public.unofficial_audit,
-  public.musiclist,
-  public.difficulty
+  unofficial_audit
+inner join
+  musiclist on unofficial_audit.id = musiclist.id
+inner join
+  difficulty on musiclist.difficulty = difficulty.id
 where
-  stamp >= cast('$stamp' as timestamp)
-and
-  unofficial_audit.id = musiclist.id
-and
-  musiclist.difficulty = difficulty.id
+  stamp > '$stamp'
 order by new
 __EOS__
 
 # get history
-psql -f $sqlfile -U $HUBOT_IIDX_DB_USER -d $HUBOT_IIDX_DB_NAME -A -F, -t
+/opt/bitnami/mysql/bin/mysql -u $HUBOT_IIDX_DB_USER $HUBOT_IIDX_DB_NAME -N -B < $sqlfile | tr "\t" ","
 
 rm -f $sqlfile

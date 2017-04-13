@@ -15,16 +15,13 @@ echo "  musiclist.name, difficulty.name, musiclist.unofficial, clearlamp.name" >
 
 cat << __EOS__ >> $sqlfile
 from
-  public.clearstate,
-  public.difficulty,
-  public.clearlamp,
-  public.musiclist
-where
-  clearstate.clearlamp = clearlamp.id
-and
-  clearstate.music = musiclist.id
-and
-  musiclist.difficulty = difficulty.id
+  clearstate
+inner join
+  musiclist on clearstate.music = musiclist.id
+inner join
+  clearlamp on clearstate.clearlamp = clearlamp.id
+inner join
+  difficulty on musiclist.difficulty = difficulty.id
 __EOS__
 
 if [ "$unofficial" != "全部" ]; then
@@ -32,11 +29,11 @@ if [ "$unofficial" != "全部" ]; then
 fi
 
 if [ `echo $unofficial | grep "以上"` ]; then
-  echo "  musiclist.unofficial >= ${unofficial:0:4}::real" >> $sqlfile
+  echo "  musiclist.unofficial >= ${unofficial:0:4}" >> $sqlfile
 elif [ `echo $unofficial | grep "以下"` ]; then
-  echo "  musiclist.unofficial <= ${unofficial:0:4}::real" >> $sqlfile
+  echo "  musiclist.unofficial <= ${unofficial:0:4}" >> $sqlfile
 elif [ `echo $unofficial | grep "未満"` ]; then
-  echo "  musiclist.unofficial < ${unofficial:0:4}::real" >> $sqlfile
+  echo "  musiclist.unofficial < ${unofficial:0:4}" >> $sqlfile
 elif [ `echo $unofficial | grep "-"` ]; then
   IFS=- eval 'arr=($unofficial)'
   if [[ ${arr[0]} > "${arr[1]}" ]]; then
@@ -44,11 +41,11 @@ elif [ `echo $unofficial | grep "-"` ]; then
     arr[0]=${arr[1]}
     arr[1]=tmp
   fi
-  echo "  musiclist.unofficial >= ${arr[0]}::real" >> $sqlfile
+  echo "  musiclist.unofficial >= ${arr[0]}" >> $sqlfile
   echo "AND" >> $sqlfile
-  echo "  musiclist.unofficial <= ${arr[1]}::real" >> $sqlfile
+  echo "  musiclist.unofficial <= ${arr[1]}" >> $sqlfile
 else
-  echo "  musiclist.unofficial = ${unofficial}::real" >> $sqlfile
+  echo "  musiclist.unofficial = ${unofficial}" >> $sqlfile
 fi
 
 lampID=0
@@ -88,8 +85,8 @@ else
   echo "  clearstate.clearlamp = $lampID" >> $sqlfile
 fi
 
-echo "order by musiclist.unofficial, musiclist.name" >> $sqlfile
+echo "order by musiclist.unofficial, musiclist.name, difficulty.name desc" >> $sqlfile
 
-psql -f $sqlfile -U $HUBOT_IIDX_DB_USER -d $HUBOT_IIDX_DB_NAME -A -F, -t
+/opt/bitnami/mysql/bin/mysql -u $HUBOT_IIDX_DB_USER $HUBOT_IIDX_DB_NAME -N -B < $sqlfile | tr "\t" ","
 
 rm -f $sqlfile
