@@ -42,7 +42,7 @@ module.exports = (robot) ->
 
       if output == 'お題'
         data = random(lines).split ","
-        say "\nお題は… #{data[0]} [#{data[1]}] (#{data[2].toFixed(1)}) です！\n" + 
+        say "\nお題は… #{data[0]} [#{data[1]}] (#{data[2]}) です！\n" + 
         "現在のランプは \'#{data[3]}\' ですよ。\n" +
         "更新目指して頑張ってください。"
         return
@@ -55,7 +55,7 @@ module.exports = (robot) ->
 
         data = line.split ","
         if tmp != data[2]
-          message += "\n【非公式#{data[2].toFixed(1)}】\n"
+          message += "\n【非公式#{data[2]}】\n"
           tmp = data[2]
 
         message += "#{data[0]} [#{data[1]}] #{data[3]}\n"
